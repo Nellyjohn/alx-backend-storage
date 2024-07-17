@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Module Docs"""
+'''
+Modules Docs
+'''
 import redis
-import uuid
-from typing import Union, Callable, Optional
+from uuid import uuid4
+from typing import Union, Optional, Callable
 
 
 def count_calls(method: Callable) -> Callable:
@@ -42,46 +44,84 @@ def call_history(method: Callable) -> Callable:
 
 
 class Cache:
+    """
+    Cache class using Redis for data storage.
+    """
+
     def __init__(self):
-        """Initializes a Redit client"""
+        """
+        Initialize the cache.
+        """
         self._redis = redis.Redis()
         self._redis.flushdb()
 
     @count_calls
     @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
-        """Takes a data argument and returns a string"""
-        key = str(uuid.uuid4())
-        self._redis.set(key, data)
-        return key
-
-    def get(self, key: str, fn: Optional[Callable] = None)
-            -> Union[str, bytes, int, float, None]:
         """
-        Take a key string argument and an optional Callable argument named fn
+        Store data in the cache.
+
+        Args:
+            data (Union[str, bytes, int, float]): The data to be stored.
+
+        Returns:
+            str: The key associated with the stored data.
+        """
+        random_key = str(uuid4())
+        self._redis.set(random_key, data)
+        return random_key
+
+    def get(self, key: str, fn: Optional[Callable]
+            = None) -> Union[str, bytes, int, float]:
+        """
+        Get data from the cache.
+
+        Args:
+            key (str): The key associated with the data.
+            fn (Optional[Callable]): A callable function to transform the
+            retrieved data.
+
+        Returns:
+            Union[str, bytes, int, float]: The retrieved data.
         """
         value = self._redis.get(key)
-        if value is None:
-            return None
-        if fn:
+        if fn and value is not None:
             return fn(value)
+
         return value
 
-    def get_str(self, key: str) -> Optional[str]:
-        """Function Docs"""
+    def get_str(self, key: str) -> str:
+        """
+        Get a string from the cache.
+
+        Args:
+            key (str): The key associated with the string.
+
+        Returns:
+            str: The retrieved string.
+        """
         value = self._redis.get(key)
         return value.decode('utf-8') if value else ""
 
-    def get_int(self, key: str) -> Optional[int]:
-        """Function Docs"""
+    def get_int(self, key: str) -> int:
+        """
+        Get an integer from the cache.
+
+        Args:
+            key (str): The key associated with the integer.
+
+        Returns:
+            int: The retrieved integer.
+        """
         value = self._redis.get(key)
         try:
             return int(value.decode('utf-8')) if value else 0
         except ValueError:
             return 0
 
-    def replay(method: Callable) -> None:
-        """
+
+def replay(method: Callable) -> None:
+    """
     Replay the history of a function.
 
     Args:
@@ -100,6 +140,6 @@ class Cache:
         outputs = cache.lrange(name + ":outputs", 0, -1)
         for i, o in zip(inputs, outputs):
             print("{}(*{}) -> {}".format(name, i.decode('utf-8'),
-                o.decode('utf-8')))
+                                         o.decode('utf-8')))
     else:
         print("{} has not been called yet.".format(name))
