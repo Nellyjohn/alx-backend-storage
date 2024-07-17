@@ -31,8 +31,13 @@ class Cache:
 
     def get_str(self, key: str) -> Optional[str]:
         """Function Docs"""
-        return self.get(key, fn=lambda x: x.decode('utf-8'))
+        value = self._redis.get(key)
+        return value.decode('utf-8') if value else ""
 
     def get_int(self, key: str) -> Optional[int]:
         """Function Docs"""
-        return self.get(key, fn=int)
+        value = self._redis.get(key)
+        try:
+            return int(value.decode('utf-8')) if value else 0
+        except ValueError:
+            return 0
